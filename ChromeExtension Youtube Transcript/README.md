@@ -6,7 +6,7 @@ A powerful Chrome extension that allows users to fetch and display transcripts f
 
 Watch the extension in action:
 
-![Demo Video](https://github.com/user-attachments/assets/a4ea561b-babc-4e6f-a35c-623ec7262e4f)
+<video src="https://github.com/user-attachments/assets/a4ea561b-babc-4e6f-a35c-623ec7262e4f" controls></video>
 
 ## Features
 
