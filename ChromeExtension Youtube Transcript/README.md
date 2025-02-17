@@ -20,12 +20,30 @@ Watch the extension in action:
 
 1. Clone this repository or download the source code
 2. Create a `config.json` file in the extension directory (copy from `config.sample.json`)
-3. Add your YouTube Data API key to `config.json`:
+3. Add your API keys to `config.json`:
    ```json
    {
-       "apiKey": "YOUR_YOUTUBE_API_KEY_HERE"
+       "apiKey": "YOUR_YOUTUBE_API_KEY_HERE",
+       "geminiApiKey": "YOUR_GEMINI_API_KEY_HERE"
    }
    ```
+
+### Getting API Keys
+
+#### YouTube Data API Key
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the YouTube Data API v3
+4. Go to Credentials and create an API key
+5. Copy the API key to your `config.json`
+
+#### Gemini API Key
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Sign in with your Google account
+3. Click on 'Create API Key'
+4. Copy the API key to your `config.json`
+
+⚠️ **Important**: Keep your API keys secure and never commit them to version control.
 4. Open Chrome and navigate to `chrome://extensions/`
 5. Enable "Developer mode" in the top right corner
 6. Click "Load unpacked" and select the extension directory
