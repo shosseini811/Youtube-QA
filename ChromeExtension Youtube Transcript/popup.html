@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YouTube Transcript Fetcher</title>
+  <style>
+    body {
+      width: 400px;
+      padding: 10px;
+    }
+    #transcript {
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      margin-top: 10px;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <button id="fetchTranscript">Get Transcript</button>
+  </div>
+  <div id="transcript"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
