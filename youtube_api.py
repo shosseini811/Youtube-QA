@@ -69,7 +69,7 @@ class YouTubeTranscriptFetcher:
 
 def main():
     # Replace with your actual API key
-    API_KEY = 'AIzaSyCmM5OzvheY_bxANbIWQHxVtZxZq2muD9s'
+    API_KEY = 'your_api_key'
     
     fetcher = YouTubeTranscriptFetcher(API_KEY)
     
