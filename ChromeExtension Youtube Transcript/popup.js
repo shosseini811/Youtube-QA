@@ -129,7 +129,16 @@ class YouTubeTranscriptFetcher {
                 throw new Error('Please navigate to a YouTube video page first');
             }
             
-            // Inject and execute script to get caption data
+            // Clear any existing injection results
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: () => {
+                    // Clear any cached data
+                    delete window.ytInitialPlayerResponse;
+                }
+            });
+
+            // Force the page to re-parse and get fresh data
             console.log('Injecting script into tab:', tab.id);
             let pageData;
             try {
@@ -142,12 +151,11 @@ class YouTubeTranscriptFetcher {
                         // Debug window object keys
                         console.log('Available window properties:', Object.keys(window));
                         
-                        // Try different ways to get the player response
-                        let ytInitialPlayerResponse = window.ytInitialPlayerResponse;
+                        // Get fresh data from the page
+                        let ytInitialPlayerResponse;
                         
-                        if (!ytInitialPlayerResponse) {
-                            // Try to find it in the page source
-                            const scripts = document.getElementsByTagName('script');
+                        // Try to find it in the page source first (most reliable method)
+                        const scripts = document.getElementsByTagName('script');
                             for (const script of scripts) {
                                 const text = script.text;
                                 if (text && text.includes('ytInitialPlayerResponse')) {
@@ -163,7 +171,6 @@ class YouTubeTranscriptFetcher {
                                     }
                                 }
                             }
-                        }
                         
                         console.log('Player response found:', !!ytInitialPlayerResponse);
                         console.log('Player response type:', typeof ytInitialPlayerResponse);
@@ -274,22 +281,6 @@ class YouTubeTranscriptFetcher {
     }
 }
 
-// Function to reload the current tab and wait for it to complete
-async function reloadTabAndWait() {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    await chrome.tabs.reload(tab.id);
-    // Wait for the page to reload
-    return new Promise((resolve) => {
-        chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-            if (tabId === tab.id && info.status === 'complete') {
-                chrome.tabs.onUpdated.removeListener(listener);
-                // Give a little extra time for YouTube to initialize
-                setTimeout(resolve, 1000);
-            }
-        });
-    });
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Extension popup loaded');
     const fetchButton = document.getElementById('fetchTranscript');
@@ -330,9 +321,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!message) return;
 
         try {
-            // Disable input while processing
+            // Disable input and show loading indicator
             chatInput.disabled = true;
             sendButton.disabled = true;
+            const loadingDiv = document.querySelector('.loading');
+            loadingDiv.classList.add('active');
 
             // Add user message to chat
             addMessage(message, true);
@@ -350,10 +343,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Chat error:', error);
             addMessage(`Error: ${error.message}`, false);
         } finally {
-            // Re-enable input
+            // Re-enable input and hide loading indicator
             chatInput.disabled = false;
             sendButton.disabled = false;
             chatInput.focus();
+            const loadingDiv = document.querySelector('.loading');
+            loadingDiv.classList.remove('active');
         }
     }
 
@@ -376,10 +371,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             loadingDiv.classList.add('active'); // Show loading indicator
             fetchButton.disabled = true; // Disable button while fetching
-            
-            // Reload the page to ensure fresh data
-            await reloadTabAndWait();
-            console.log('Page reloaded, proceeding with transcript fetch');
             
             console.log('Getting current tab URL...');
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
