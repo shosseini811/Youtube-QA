@@ -289,7 +289,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     fetchButton.addEventListener('click', async () => {
         console.log('Fetch button clicked');
+        const loadingDiv = document.querySelector('.loading');
+        transcriptDiv.textContent = ''; // Clear previous content
+        
         try {
+            loadingDiv.classList.add('active'); // Show loading indicator
             console.log('Getting current tab URL...');
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             console.log('Current tab URL:', tab.url);
@@ -325,6 +329,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             transcriptDiv.textContent = output;
         } catch (error) {
             transcriptDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+        } finally {
+            loadingDiv.classList.remove('active'); // Hide loading indicator
         }
     });
 });
