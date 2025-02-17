@@ -2,6 +2,12 @@
 
 A powerful Chrome extension that allows users to fetch and display transcripts from YouTube videos directly in their browser.
 
+## Demo
+
+Watch the extension in action:
+
+![Demo Video](https://github.com/user-attachments/assets/a4ea561b-babc-4e6f-a35c-623ec7262e4f)
+
 ## Features
 
 - 🎯 Instantly fetch transcripts from any YouTube video
