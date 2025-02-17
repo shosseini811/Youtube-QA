@@ -294,26 +294,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         try {
             loadingDiv.classList.add('active'); // Show loading indicator
+            fetchButton.disabled = true; // Disable button while fetching
+            
             console.log('Getting current tab URL...');
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!tab || !tab.url) {
+                throw new Error('Could not get current tab URL');
+            }
             console.log('Current tab URL:', tab.url);
+            
             const videoId = transcriptFetcher.getVideoId(tab.url);
+            console.log('Video ID:', videoId);
 
             if (!videoId) {
-                transcriptDiv.innerHTML = '<p class="error">Not a valid YouTube video page</p>';
-                return;
+                throw new Error('Not a valid YouTube video page');
             }
 
             // Get video info
             const videoInfo = await transcriptFetcher.getVideoInfo(videoId);
             if (!videoInfo) {
-                transcriptDiv.innerHTML = '<p class="error">Could not fetch video information</p>';
-                return;
+                throw new Error('Could not fetch video information');
             }
+            console.log('Video info:', videoInfo);
 
             // Get transcript
             const transcript = await transcriptFetcher.getTranscript(videoId);
-            console.log('Fetched transcript:', transcript);
+            if (!transcript || transcript.length === 0) {
+                throw new Error('No transcript available for this video');
+            }
+            console.log('Fetched transcript length:', transcript.length);
+            
             // Format output
             let output = `Title: ${videoInfo.title}\n`;
             output += `Channel: ${videoInfo.channel}\n\n`;
@@ -328,9 +338,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             transcriptDiv.textContent = output;
         } catch (error) {
+            console.error('Error fetching transcript:', error);
             transcriptDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
         } finally {
             loadingDiv.classList.remove('active'); // Hide loading indicator
+            fetchButton.disabled = false; // Re-enable button
         }
     });
 });
