@@ -274,10 +274,27 @@ class YouTubeTranscriptFetcher {
     }
 }
 
+// Function to reload the current tab and wait for it to complete
+async function reloadTabAndWait() {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    await chrome.tabs.reload(tab.id);
+    // Wait for the page to reload
+    return new Promise((resolve) => {
+        chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+            if (tabId === tab.id && info.status === 'complete') {
+                chrome.tabs.onUpdated.removeListener(listener);
+                // Give a little extra time for YouTube to initialize
+                setTimeout(resolve, 1000);
+            }
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Extension popup loaded');
     const fetchButton = document.getElementById('fetchTranscript');
     const transcriptDiv = document.getElementById('transcript');
+    const analysisDiv = document.getElementById('analysis');
 
     // Initialize the transcript fetcher
     const initialized = await initializeTranscriptFetcher();
@@ -286,15 +303,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     console.log('Created YouTubeTranscriptFetcher instance');
+    
+    // Initialize Gemini API
+    const config = await fetch(chrome.runtime.getURL('config.json')).then(r => r.json());
+    const geminiApi = new GeminiAPI(config.geminiApiKey);
 
     fetchButton.addEventListener('click', async () => {
         console.log('Fetch button clicked');
         const loadingDiv = document.querySelector('.loading');
         transcriptDiv.textContent = ''; // Clear previous content
+        analysisDiv.textContent = ''; // Clear previous analysis
         
         try {
             loadingDiv.classList.add('active'); // Show loading indicator
             fetchButton.disabled = true; // Disable button while fetching
+            
+            // Reload the page to ensure fresh data
+            await reloadTabAndWait();
+            console.log('Page reloaded, proceeding with transcript fetch');
             
             console.log('Getting current tab URL...');
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -337,6 +363,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             transcriptDiv.textContent = output;
+            
+            // Get Gemini analysis
+            try {
+                const analysis = await geminiApi.generateResponse(output);
+                analysisDiv.textContent = analysis;
+            } catch (error) {
+                console.error('Error getting Gemini analysis:', error);
+                analysisDiv.innerHTML = `<p class="error">Error getting AI analysis: ${error.message}</p>`;
+            }
         } catch (error) {
             console.error('Error fetching transcript:', error);
             transcriptDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
