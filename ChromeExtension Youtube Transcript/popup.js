@@ -294,7 +294,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('Extension popup loaded');
     const fetchButton = document.getElementById('fetchTranscript');
     const transcriptDiv = document.getElementById('transcript');
-    const analysisDiv = document.getElementById('analysis');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-message');
 
     // Initialize the transcript fetcher
     const initialized = await initializeTranscriptFetcher();
@@ -308,11 +310,68 @@ document.addEventListener('DOMContentLoaded', async () => {
     const config = await fetch(chrome.runtime.getURL('config.json')).then(r => r.json());
     const geminiApi = new GeminiAPI(config.geminiApiKey);
 
+    // Function to add a message to the chat
+    function addMessage(content, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+        if (!isUser) {
+            const converter = new showdown.Converter();
+            messageDiv.innerHTML = converter.makeHtml(content);
+        } else {
+            messageDiv.textContent = content;
+        }
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Handle chat input
+    async function handleChat() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        try {
+            // Disable input while processing
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+
+            // Add user message to chat
+            addMessage(message, true);
+            chatInput.value = '';
+
+            // Get AI response
+            let response;
+            if (geminiApi.chatHistory.length <= 1) { // Only system message present
+                response = await geminiApi.generateResponse(geminiApi.currentTranscript, message);
+            } else {
+                response = await geminiApi.chat(message);
+            }
+            addMessage(response, false);
+        } catch (error) {
+            console.error('Chat error:', error);
+            addMessage(`Error: ${error.message}`, false);
+        } finally {
+            // Re-enable input
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            chatInput.focus();
+        }
+    }
+
+    // Set up chat input handlers
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleChat();
+        }
+    });
+
+    sendButton.addEventListener('click', handleChat);
+
     fetchButton.addEventListener('click', async () => {
         console.log('Fetch button clicked');
         const loadingDiv = document.querySelector('.loading');
         transcriptDiv.textContent = ''; // Clear previous content
-        analysisDiv.textContent = ''; // Clear previous analysis
+        chatMessages.innerHTML = ''; // Clear previous chat messages
         
         try {
             loadingDiv.classList.add('active'); // Show loading indicator
@@ -364,14 +423,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             transcriptDiv.textContent = output;
             
-            // Get Gemini analysis
-            try {
-                const analysis = await geminiApi.generateResponse(output);
-                analysisDiv.textContent = analysis;
-            } catch (error) {
-                console.error('Error getting Gemini analysis:', error);
-                analysisDiv.innerHTML = `<p class="error">Error getting AI analysis: ${error.message}</p>`;
-            }
+            // Initialize chat with transcript
+            geminiApi.setTranscript(output);
+            
+            // Enable chat input
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            chatMessages.innerHTML = '';
+            addMessage('I have analyzed the transcript. Feel free to ask me any questions about the video!', false);
         } catch (error) {
             console.error('Error fetching transcript:', error);
             transcriptDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
