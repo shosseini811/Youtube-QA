@@ -1,6 +1,6 @@
-# YouTube Transcript Fetcher Chrome Extension
+# YouTube Transcript Fetcher & AI Assistant Chrome Extension
 
-A powerful Chrome extension that allows users to fetch and display transcripts from YouTube videos directly in their browser.
+A powerful Chrome extension that not only fetches YouTube video transcripts but also allows you to have intelligent conversations about the video content using Google's Gemini AI. Get instant access to video transcripts and ask questions about any part of the video.
 
 ## Demo
 
@@ -11,10 +11,14 @@ Watch the extension in action:
 ## Features
 
 - 🎯 Instantly fetch transcripts from any YouTube video
+- 🤖 AI-powered video content analysis using Google's Gemini
+- 💬 Interactive chat interface to ask questions about the video
 - 🌐 Support for auto-generated captions
-- 🔍 Works with the current active YouTube tab
-- 📝 Clean and user-friendly interface
+- 🔍 Real-time transcript processing
+- 📝 Clean and modern user interface
 - 🌍 Support for multiple languages (through YouTube's caption system)
+- ⚡ Fast and responsive performance
+- 🔒 Secure API key management
 
 ## Installation
 
@@ -38,7 +42,7 @@ Watch the extension in action:
 5. Copy the API key to your `config.json`
 
 #### Gemini API Key
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. Sign in with your Google account
 3. Click on 'Create API Key'
 4. Copy the API key to your `config.json`
@@ -55,6 +59,19 @@ Watch the extension in action:
 3. Click the "Fetch Transcript" button
 4. The transcript will appear in the popup window
 
+## Project Structure
+
+```
+├── manifest.json           # Chrome extension configuration
+├── popup.html             # Extension popup interface
+├── popup.js               # Main extension logic
+├── gemini.js              # Gemini AI integration
+├── config.js              # Configuration management
+├── config.sample.json     # API key configuration template
+├── showdown.min.js        # Markdown rendering library
+└── README.md              # Project documentation
+```
+
 ## Technical Details
 
 ### Architecture
@@ -70,9 +87,28 @@ The extension is built using vanilla JavaScript and follows Chrome Extension Man
 
 ### Key Components
 
-#### Configuration Management
+#### 1. User Interface (`popup.html`, `popup.js`)
+- Split-screen layout with transcript and chat sections
+- Real-time loading indicators
+- Markdown rendering for AI responses
+- Responsive design for better usability
 
-The extension uses a secure configuration system to handle sensitive data:
+#### 2. Transcript Processing (`popup.js`)
+- YouTube Data API integration
+- Automatic caption track detection
+- Timestamp-synchronized transcript extraction
+- Error handling for various YouTube page states
+
+#### 3. AI Integration (`gemini.js`)
+- Google Gemini API integration
+- Context-aware conversation handling
+- Intelligent response generation
+- Chat history management
+
+#### 4. Configuration Management (`config.js`)
+- Secure API key storage
+- Environment configuration
+- Chrome storage integration
 
 1. Configuration Files:
    - `config.json`: Main configuration file that stores your YouTube Data API key
